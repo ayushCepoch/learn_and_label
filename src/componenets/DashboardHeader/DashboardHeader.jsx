@@ -17,9 +17,6 @@ const menuOptions = [
   {
     name:'Preview'
   },
-  {
-    name:'Save'
-  },
 ]
 
 const DashboardHeader = ({title,otherTitle,ShowOtherTitle,onSave}) => {
@@ -69,7 +66,7 @@ const DashboardHeader = ({title,otherTitle,ShowOtherTitle,onSave}) => {
         }}>
           {menuOptions.map((item)=>{
             return<div onClick={()=>{
-              if(item.name ==="Save"){
+              if(item.name ==="Preview"){
                 onSave()
               }else{
 
