@@ -86,7 +86,7 @@ const EditingPanel = () => {
                   .map((item, index) => (
                     <div
                       key={index}
-                      style={{ width: option === 'Option1' ? '48%' : '96%' }}
+                      style={{ width: option === 'Option1' ? '48%' : '96%' ,border:'1px solid #000'}}
                       className={`h-[23%] flex flex-col`}
                     >
                       <div
@@ -95,12 +95,12 @@ const EditingPanel = () => {
                           height: '90%',
                           borderRadius: '8px',
                         }}
-                        className="bg-[#707070] flex justify-center items-center"
+                        className="flex justify-center items-center"
                       >
                         <img height={40} width={40} src={plusIcon} alt="Add" />
                       </div>
                       <div className="w-full flex flex-row justify-center">
-                        <input className="w-1/2" placeholder="Text here" />
+                        <input className="w-1/2 py-[5px]" placeholder="Text here" />
                       </div>
                     </div>
                   ))}

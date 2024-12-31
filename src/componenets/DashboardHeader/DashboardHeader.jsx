@@ -62,6 +62,7 @@ const DashboardHeader = ({title,otherTitle,ShowOtherTitle,onSave}) => {
           background:'#fff',
           top:'50px',
           right:'10px',
+          borderRadius:'8px',
           width:'40%'
         }}>
           {menuOptions.map((item)=>{
