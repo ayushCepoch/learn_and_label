@@ -221,6 +221,30 @@
 <button class="floating-add">+</button>
 
 <script>
+ function sendEvent(event, ...data) {
+  try {
+    console.info("event:", event);
+    console.info("data:", data);
+
+    // Check for Android device
+    if (/Android/.test(navigator.userAgent)) {
+      console.info("Device is Android");
+
+      // Check if the MxTrk interface exists before calling it
+      if (typeof window.LabelnLearn !== "undefined") {
+        if (data.length > 1) {
+          window.LabelnLearn.sendEvent(event, JSON.stringify(data));
+        } else {
+          window.LabelnLearn.sendEvent(event, data[0]);
+        }
+      } else {
+        console.error("LabelnLearn object is not defined on Android.");
+      }
+    }
+  } catch (e) {
+    console.error("Error in sending event:", e);
+  }
+}
     function createLabelCard() {
         const card = document.createElement('div');
         card.className = 'label-card';
@@ -248,8 +272,18 @@
         card.appendChild(textInput);
 
         plusIcon.addEventListener('click', () => {
-            imageInput.click();
+            // imageInput.click();
+            console.log("========Clicked")
+            sendEvent('UploadImage')
         });
+
+        window.sendImageData = function (data){
+            const img = document.createElement('img');
+            img.src = data.imgUrl;
+                    img.className = 'preview-image';
+                    imageContainer.innerHTML = '';
+                    imageContainer.appendChild(img);
+        }
 
         imageInput.addEventListener('change', (e) => {
             if (e.target.files && e.target.files[0]) {
