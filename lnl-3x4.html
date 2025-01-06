@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Labels</title>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        @page {
+            margin: 0;
+            size: 8.5in 11in;
+            margin: 0mm;
+            padding: 0mm;
+        }
+
+        @media print {
+            .header, .floating-add {
+                display: none !important;
+            }
+
+            .pages-container {
+                gap: 32px !important;
+            }
+
+            .grid-container {
+                width: 85vw !important;
+                height: calc(11in - 32px) !important;
+            }
+
+            .plus-icon {
+                display: none !important;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid #eee;
+            background: white;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .back-button {
+            font-size: 24px;
+            text-decoration: none;
+            color: #333;
+            margin-right: 16px;
+        }
+
+        .title {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .menu-button {
+            margin-left: auto;
+            font-size: 24px;
+            color: #333;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .pages-container {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            padding: 16px;
+            background: white;
+            min-height: 0; /* Prevent expanding beyond content */
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 3px;
+            margin: 0 auto;
+            width: 92vw;
+            height: calc(calc(92vw * 1.294) + 18px);
+            background: white;
+            position: relative;
+        }
+
+        .label-card {
+            border: 1px solid black;
+            border-radius: 0px;
+            overflow: hidden;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .image-container {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .plus-icon {
+            width: 40px;
+            height: 40px;
+            background: #b4d345;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .image-input {
+            display: none;
+        }
+
+        .preview-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .text-input {
+            width: 100%;
+            height: 32px;
+            border: none;
+            font-size: 14px;
+            line-height: 16px;
+            color: #666;
+            text-align: center;
+        }
+
+        .text-input:focus {
+            outline: none;
+            background: #f0f0f0;
+        }
+
+        .floating-add {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            background: #b4d345;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            border: none;
+        }
+
+        .menu {
+            position: absolute;
+            top: 100%;
+            right: 16px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 1000;
+        }
+
+        .menu.show {
+            display: block;
+        }
+
+        .menu-item {
+            padding: 12px 24px;
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .menu-item:hover {
+            background: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <a class="back-button" href="#">←</a>
+    <span class="title">Labels</span>
+    <button class="menu-button">⋮</button>
+    <div class="menu">
+        <div class="menu-item" id="preview-pdf">Preview PDF</div>
+    </div>
+</div>
+
+<div class="pages-container">
+    <!-- Pages will be added here -->
+</div>
+
+<button class="floating-add">+</button>
+
+<script>
+    function createLabelCard() {
+        const card = document.createElement('div');
+        card.className = 'label-card';
+
+        const imageContainer = document.createElement('div');
+        imageContainer.className = 'image-container';
+
+        const plusIcon = document.createElement('div');
+        plusIcon.className = 'plus-icon';
+        plusIcon.innerHTML = '+';
+
+        const imageInput = document.createElement('input');
+        imageInput.type = 'file';
+        imageInput.accept = 'image/*';
+        imageInput.className = 'image-input';
+
+        const textInput = document.createElement('input');
+        textInput.type = 'text';
+        textInput.className = 'text-input';
+        textInput.placeholder = 'Text here';
+
+        imageContainer.appendChild(plusIcon);
+        card.appendChild(imageContainer);
+        card.appendChild(imageInput);
+        card.appendChild(textInput);
+
+        plusIcon.addEventListener('click', () => {
+            imageInput.click();
+        });
+
+        imageInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = document.createElement('img');
+                    img.src = event.target.result;
+                    img.className = 'preview-image';
+                    imageContainer.innerHTML = '';
+                    imageContainer.appendChild(img);
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        return card;
+    }
+
+    function createGridContainer() {
+        const gridContainer = document.createElement('div');
+        gridContainer.className = 'grid-container';
+
+        // Add 8 label cards
+        for (let i = 0; i < 8; i++) {
+            gridContainer.appendChild(createLabelCard());
+        }
+
+        return gridContainer;
+    }
+
+    // Initialize with first page
+    const pagesContainer = document.querySelector('.pages-container');
+    pagesContainer.appendChild(createGridContainer());
+
+    // Floating add button functionality - adds a new page
+    const floatingAdd = document.querySelector('.floating-add');
+    floatingAdd.addEventListener('click', () => {
+        pagesContainer.appendChild(createGridContainer());
+        // Scroll to the new page
+        window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: 'smooth'
+        });
+    });
+    const menuButton = document.querySelector('.menu-button');
+    const menu = document.querySelector('.menu');
+
+    menuButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        menu.classList.toggle('show');
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', () => {
+        menu.classList.remove('show');
+    });
+
+    function storeOriginalStyles(element) {
+        // Store original styles in a data attribute
+        const originalStyles = {};
+        const computedStyles = window.getComputedStyle(element);
+
+        // Store the original style attribute if it exists
+        originalStyles.styleAttribute = element.getAttribute('style');
+
+        // Store for children recursively
+        Array.from(element.children).forEach(child => storeOriginalStyles(child));
+
+        // Store the original styles data
+        element.dataset.originalStyles = JSON.stringify(originalStyles);
+    }
+
+    function restoreOriginalStyles(element) {
+        // Retrieve stored original styles
+        const originalStyles = JSON.parse(element.dataset.originalStyles || '{}');
+
+        // Restore the original style attribute or remove it if it didn't exist
+        if (originalStyles.styleAttribute) {
+            element.setAttribute('style', originalStyles.styleAttribute);
+        } else {
+            element.removeAttribute('style');
+        }
+
+        // Remove the data attribute we used for storage
+        delete element.dataset.originalStyles;
+
+        // Restore for children recursively
+        Array.from(element.children).forEach(child => restoreOriginalStyles(child));
+    }
+
+    function applyInlineStyles(element) {
+        const computedStyles = window.getComputedStyle(element);
+
+        for (let key of computedStyles) {
+            element.style[key] = computedStyles.getPropertyValue(key);
+        }
+
+        Array.from(element.children).forEach(child => applyInlineStyles(child));
+    }
+
+    // Preview PDF functionality
+    document.getElementById('preview-pdf').addEventListener('click', async () => {
+        const gridContainers = document.querySelectorAll('.grid-container');
+        const pdf = new jspdf.jsPDF({
+            orientation: 'portrait',
+            unit: 'in',
+            format: [8.5, 11]
+        });
+
+        // Hide floating add button during capture
+        const floatingAdd = document.querySelector('.floating-add');
+        floatingAdd.style.display = 'none';
+
+        try {
+            for (let i = 0; i < gridContainers.length; i++) {
+                // Store original styles before modification
+                storeOriginalStyles(gridContainers[i]);
+
+                // Apply inline styles for capture
+                applyInlineStyles(gridContainers[i]);
+
+                // Capture the grid container
+                const canvas = await html2canvas(gridContainers[i], {
+                    scale: 5, // Higher resolution
+                    useCORS: true, // Handle cross-origin images
+                    logging: false,
+                    windowWidth: gridContainers[i].scrollWidth,
+                    windowHeight: gridContainers[i].scrollHeight
+                });
+
+                // Restore original styles immediately after capture
+                restoreOriginalStyles(gridContainers[i]);
+
+                // Convert canvas to image
+                const imgData = canvas.toDataURL('image/jpeg', 0.3);
+
+                // Add new page if not first page
+                if (i > 0) {
+                    pdf.addPage();
+                }
+                const imgProps = pdf.getImageProperties(imgData);
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+
+                const marginX = 0;
+                const marginY = 0;
+
+                const imgWidth = pageWidth - (marginX * 2);
+                const imgHeight = pageHeight - (marginY * 2);
+
+                pdf.addImage(imgData, 'JPEG', marginX, marginY, imgWidth, imgHeight);
+            }
+
+            // Save the PDF
+            pdf.save('labels.pdf');
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            alert('Error generating PDF. Please try again.');
+        } finally {
+            // Show floating add button again
+            floatingAdd.style.display = 'flex';
+        }
+    });
+
+
+    // async function loadLocalImages() {
+    //     try {
+    //         // Open file picker for multiple images
+    //         const fileHandle = await window.showOpenFilePicker({
+    //             multiple: true,
+    //             types: [{
+    //                 description: 'Images',
+    //                 accept: {
+    //                     'image/*': ['.png', '.jpg', '.jpeg', '.gif']
+    //                 }
+    //             }]
+    //         });
+    //
+    //         const cards = document.querySelectorAll('.label-card');
+    //
+    //         for (let i = 0; i < Math.min(fileHandle.length, cards.length); i++) {
+    //             const file = await fileHandle[i].getFile();
+    //             const reader = new FileReader();
+    //
+    //             reader.onload = (event) => {
+    //                 const imageContainer = cards[i].querySelector('.image-container');
+    //                 const img = document.createElement('img');
+    //                 img.src = event.target.result;
+    //                 img.className = 'preview-image';
+    //                 imageContainer.innerHTML = '';
+    //                 imageContainer.appendChild(img);
+    //             };
+    //
+    //             reader.readAsDataURL(file);
+    //         }
+    //     } catch (err) {
+    //         console.error('Error loading images:', err);
+    //     }
+    // }
+    //
+    // // Add button to header
+    // const headerTitle = document.querySelector('.title');
+    // const loadImagesButton = document.createElement('button');
+    // loadImagesButton.textContent = 'Load Images';
+    // loadImagesButton.style.marginLeft = '16px';
+    // loadImagesButton.addEventListener('click', loadLocalImages);
+    // headerTitle.parentNode.insertBefore(loadImagesButton, headerTitle.nextSibling);
+</script>
+</body>
+</html>
