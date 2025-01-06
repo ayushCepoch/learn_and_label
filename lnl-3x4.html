@@ -278,6 +278,7 @@
         });
 
         window.sendImageData = function (data) {
+            console.log("=========data",data)
     const img = document.createElement('img');
 
     const isBase64 = /^data:image\/(png|jpeg|jpg|gif);base64,/.test(data);
