@@ -277,13 +277,20 @@
             sendEvent('UploadImage')
         });
 
-        window.sendImageData = function (data){
-            const img = document.createElement('img');
-            img.src = data.imgUrl;
-                    img.className = 'preview-image';
-                    imageContainer.innerHTML = '';
-                    imageContainer.appendChild(img);
-        }
+        window.sendImageData = function (data) {
+    const img = document.createElement('img');
+
+    const isBase64 = /^data:image\/(png|jpeg|jpg|gif);base64,/.test(data);
+
+    if (isBase64) {
+        img.src = `data:image/jpeg;base64,${data}`
+    } else {
+        img.src = data;
+    }
+    img.className = 'preview-image';
+    imageContainer.innerHTML = '';
+    imageContainer.appendChild(img);
+};
 
         imageInput.addEventListener('change', (e) => {
             if (e.target.files && e.target.files[0]) {
